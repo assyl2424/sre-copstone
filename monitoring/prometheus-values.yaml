@@ -3,6 +3,27 @@ prometheus:
     serviceMonitorSelectorNilUsesHelmValues: false
     serviceMonitorSelector: {}
     serviceMonitorNamespaceSelector: {}
+    additionalPrometheusRulesMap:
+      sre-alerts:
+        groups:
+          - name: sre-service-alerts
+            rules:
+              - alert: HighErrorRate
+                expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+                for: 2m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: "High error rate on orders-service"
+                  description: "Error rate is above 5% for more than 2 minutes."
+              - alert: ServiceDown
+                expr: up{app="orders-service"} == 0
+                for: 1m
+                labels:
+                  severity: page
+                annotations:
+                  summary: "Service orders-service is down"
+                  description: "The service has been unreachable for more than 1 minute."
 
 grafana:
   sidecar:
